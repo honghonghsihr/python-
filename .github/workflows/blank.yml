@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import csv
 import time
 import random
-# 目标URL（示例为 quotes.toscrape.com）
 BASE_URL = "https://quotes.toscrape.com/page/{}/"
 
 HEADERS = {
