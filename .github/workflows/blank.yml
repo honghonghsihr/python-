@@ -1,0 +1,45 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+import time
+import random
+# 目标URL（示例为 quotes.toscrape.com）
+BASE_URL = "https://quotes.toscrape.com/page/{}/"
+
+HEADERS = {
+   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                 "AppleWebKit/537.36 (KHTML, like Gecko) "
+                 "Chrome/120.0.0.0 Safari/537.36"
+}
+def fetch_page(page):
+   url = BASE_URL.format(page)
+   resp = requests.get(url, headers=HEADERS, timeout=10)
+   resp.raise_for_status()
+   return resp.text
+def parse_html(html):
+   soup = BeautifulSoup(html, "lxml")
+   quotes_data = []
+   for quote in soup.select("div.quote"):
+       text = quote.select_one("span.text").get_text(strip=True)
+       author = quote.select_one("small.author").get_text(strip=True)
+       tags = [t.get_text(strip=True) for t in quote.select("div.tags a.tag")]
+       quotes_data.append([text, author, ", ".join(tags)])
+   return quotes_data
+def save_to_csv(data, filename="quotes.csv"):
+   with open(filename, "w", newline="", encoding="utf-8-sig") as f:
+       writer = csv.writer(f)
+       writer.writerow(["内容", "作者", "标签"])
+       writer.writerows(data)
+def main():
+   all_data = []
+   for page in range(1, 6): # 爬取前5页
+       html = fetch_page(page)
+       data = parse_html(html)
+       if not data:
+           break
+       all_data.extend(data)
+       time.sleep(random.uniform(1, 3)) # 随机延时防封
+   save_to_csv(all_data)
+   print(f"已保存 {len(all_data)} 条数据到 quotes.csv")
+if __name__ == "__main__":
+   main()
